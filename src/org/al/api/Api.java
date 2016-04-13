@@ -39,4 +39,8 @@ public class Api {
     public Board getBoard() {
         return board;
     }
+
+    public int tentativeRowsRemoved(Coords[] pieceCoords) {
+        return board.tentativeRowsRemoved(pieceCoords);
+    }
 }

@@ -8,8 +8,8 @@ import org.al.quadrisexceptions.NonexistentTetrisPieceException;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.OptionalDouble;
 
 public class Main {
     private static final int runs = 100000;
@@ -48,14 +48,18 @@ public class Main {
 
         for (int i = 0; i < runs; i++) {
             scores.add(new Main().play());
+            if (i % 1000 == 0) {
+                System.out.println((double) i / (double) runs * (double) 100 + "% complete.");
+            }
         }
 
-        OptionalDouble optionalAverage = scores
+        double average = scores
                 .stream()
                 .mapToDouble(a -> a)
-                .average();
-
-        double average = optionalAverage.isPresent() ? optionalAverage.getAsDouble() : 0;
+                .average().isPresent() ? scores
+                .stream()
+                .mapToDouble(a -> a)
+                .average().getAsDouble() : 0;
 
         System.out.println("Average from " + runs + " runs: " + average + " rows.");
     }
@@ -70,35 +74,11 @@ public class Main {
 
             List<Coords[]> possiblePositions = api.possibleMoves(currentPiece);
 
-            // Find the lowest possible one. (Stupid method, good control group)
-            Coords[] lowestPosition = possiblePositions.get(0);
+            int position = (int) (Math.random() * ((possiblePositions.size() - 1) + 1));
 
-            for (int i = 1; i < possiblePositions.size(); i++) {
-                Coords[] anotherPosition = possiblePositions.get(i);
-//                System.out.println(Arrays.toString(anotherPosition));
+            Coords[] chosenPosition = possiblePositions.get(position);
 
-                int lowestOfLowestPosition = lowestPosition[0].r;
-                int lowestOfAnotherPosition = anotherPosition[0].r;
-
-                for (int it = 1; it < 4; it++) {
-                    if (lowestPosition[it].r > lowestOfLowestPosition) { //If it's even lower
-                        lowestOfLowestPosition = lowestPosition[it].r;
-                    }
-                }
-
-                for (int it = 1; it < 4; it++) {
-                    if (anotherPosition[it].r > lowestOfAnotherPosition) { //If it's even lower
-                        lowestOfAnotherPosition = anotherPosition[it].r;
-                    }
-                }
-
-
-                if (lowestOfAnotherPosition > lowestOfLowestPosition) {
-                    lowestPosition = anotherPosition;
-                }
-            }
-
-            boolean placed = api.placePiece(lowestPosition);
+            boolean placed = api.placePiece(chosenPosition);
 
             if (!placed) { // Game lost
 //                System.out.println("Final score: " + api.getScore() + ".");
@@ -112,5 +92,31 @@ public class Main {
                 Thread.sleep(1000);
             }
         }
+    }
+
+    private Coords[] lowest(List<PositionRows> positions) {
+        Coords[] position = positions.get(0).getPosition();
+        int lowest = 0;
+
+        for (PositionRows p : positions) {
+            if (getLowest(p.getPosition()) > lowest) {
+                lowest = getLowest(p.getPosition());
+                position = p.getPosition();
+            }
+        }
+
+        return position;
+    }
+
+    private int getLowest(Coords[] position) {
+        int lowest = 0;
+
+        for (Coords c : position) {
+            if (c.r > lowest) {
+                lowest = c.r;
+            }
+        }
+
+        return lowest;
     }
 }

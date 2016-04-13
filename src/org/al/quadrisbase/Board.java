@@ -83,7 +83,7 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
         this.num_completed_rows = old_completed_rows;
     }
 
-    public Board clone() throws CloneNotSupportedException {
+    public Board boardClone() {
         Board new_board = new Board();
         new_board.setBoard(this.board);
         new_board.setBlock(this.block);
@@ -243,6 +243,21 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
         deleteFullRows();
 
         return !isLost();
+    }
+
+    /**
+     * Returns how many rows will be filled if a piece is placed in a certain place
+     * @param pieceCoords - the coordinates of the piece
+     * @return - the number of rows that will be filled
+     */
+    public int tentativeRowsRemoved(Coords[] pieceCoords) {
+        char[][] tempBoard = this.boardClone().getBoard();
+
+        for (Coords c : pieceCoords) {
+            tempBoard[c.r][c.c] = 'X';
+        }
+
+        return getCompleteRows().length;
     }
 
 
