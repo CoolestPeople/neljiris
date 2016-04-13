@@ -188,14 +188,10 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
         for (int r = 0; r < 4; r++) {
             for (int c = 0; c < board[r].length; c++) {
                 if (board[r][c] == 'X') {
-                    System.out.println("There's an 'X' at row " + r + ", column " + c + ", s the game is lost.");
-                    System.out.println("Here's the board:");
-                    System.out.println(this);
                     return true;
                 }
             }
         }
-
         return false;
     }
 

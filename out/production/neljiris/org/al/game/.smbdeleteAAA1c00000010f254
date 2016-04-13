@@ -48,30 +48,30 @@ public class Main {
             frame.setLocationRelativeTo(null);
         }
 
-        List<Integer> scores = new ArrayList<>();
-
-        for (int i = 0; i < runs; i++) {
-            scores.add(new Main().play());
-            if (i % 1000 == 0) {
-                System.out.println((double) i / (double) runs * (double) 100 + "% complete.");
-            }
-        }
-
-        double average = scores
-                .stream()
-                .mapToDouble(a -> a)
-                .average().isPresent() ? scores
-                .stream()
-                .mapToDouble(a -> a)
-                .average().getAsDouble() : 0;
-
-        System.out.println("Average from " + runs + " runs: " + average + " rows.");
-
-//        List<Move> moves = new Main().teach();
-
-//        if (moves != null) {
-//            moves.forEach(System.out::println);
+//        List<Integer> scores = new ArrayList<>();
+//
+//        for (int i = 0; i < runs; i++) {
+//            scores.add(new Main().play());
+//            if (i % 1000 == 0) {
+//                System.out.println((double) i / (double) runs * (double) 100 + "% complete.");
+//            }
 //        }
+
+//        double average = scores
+//                .stream()
+//                .mapToDouble(a -> a)
+//                .average().isPresent() ? scores
+//                .stream()
+//                .mapToDouble(a -> a)
+//                .average().getAsDouble() : 0;
+
+//        System.out.println("Average from " + runs + " runs: " + average + " rows.");
+
+        List<Move> moves = new Main().teach();
+
+        if (moves != null) {
+            moves.forEach(System.out::println);
+        }
     }
 
     private int play() throws InterruptedException, NonexistentTetrisPieceException {
@@ -95,7 +95,7 @@ public class Main {
             if (displayGame) {
                 printedTetrisBoard.setText(api.getBoard().toString());
 
-                Thread.sleep(500);
+                Thread.sleep(1000);
             }
         }
     }
