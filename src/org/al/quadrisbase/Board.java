@@ -237,7 +237,7 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
     // Doesn't make sure pieceCoords represents a valid move.
     // Returns true if game is lost, false otherwise.
     public boolean placePiece(Coords[] pieceCoords) {
-//        System.out.println(Arrays.toString(pieceCoords));
+        System.out.println(Arrays.toString(pieceCoords));
 
         for (Coords c : pieceCoords) {
             board[c.r][c.c] = 'X';
@@ -277,7 +277,9 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
             board[row][k] = '.';
         }
 
-        System.arraycopy(board, 0, board, 1, row);
+        for (int k = row - 1; k >= 0; k--) {
+            board[k + 1] = board[k];
+        }
     }
 
     private int[] getCompleteRows() {

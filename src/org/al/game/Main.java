@@ -84,10 +84,15 @@ public class Main {
 
             Coords[] lowestPosition = getMoveByGetLowest(api, currentPiece);
 
+            if (lowestPosition.length != 4) {
+                System.err.println("Something has gone horribly wrong nothing is as it seems fair is foul and foul is fair with semicolons flowing out of your eyes like liquid pain he comes he comes ");
+            }
+
             boolean placed = api.placePiece(lowestPosition);
 
             if (!placed) { // Game lost
 //                System.out.println("Final score: " + api.getScore() + ".");
+                printedTetrisBoard.setText(api.getBoard().toString());
                 return api.getScore();
             }
 
