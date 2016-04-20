@@ -273,12 +273,16 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
     }
 
     private void deleteRowAndShift(int row) {
-        for (int k = 0; k < board[row].length; k++) {
-            board[row][k] = '.';
+        for (int i = 0; i < board[row].length; i++) {
+            board[row][i] = '.';
         }
 
-        for (int k = row - 1; k >= 0; k--) {
-            board[k + 1] = board[k];
+        for (int k = row - 1; k > 0; k--) {
+            for (int i = 0; i < board[k + 1].length; i++) {
+                board[k + 1][i] = '.';
+            }
+
+            board[k + 1] = board[k].clone();
         }
     }
 
