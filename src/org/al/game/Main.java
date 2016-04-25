@@ -1,14 +1,22 @@
 package org.al.game;
 
+import ar.com.hjg.pngj.ImageInfo;
+import ar.com.hjg.pngj.ImageLineHelper;
+import ar.com.hjg.pngj.ImageLineInt;
+import ar.com.hjg.pngj.PngWriter;
 import org.al.api.Api;
 import org.al.generic.Coords;
+import org.al.quadrisbase.Constants;
 import org.al.quadrisbase.Piece;
 import org.al.quadrisexceptions.NonexistentTetrisPieceException;
-import org.al.training.Move;
+import org.al.training.Situation;
+import org.al.training.Utils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
@@ -16,6 +24,9 @@ public class Main {
     private static final int runs = 1;
 
     private static boolean displayGame = true;
+
+    private static boolean teach = true;
+    private static boolean play = !teach;
 
     private static JTextArea printedTetrisBoard;
     private static Scanner in;
@@ -48,30 +59,62 @@ public class Main {
             frame.setLocationRelativeTo(null);
         }
 
-        List<Integer> scores = new ArrayList<>();
 
-        for (int i = 0; i < runs; i++) {
-            scores.add(new Main().play());
-            if (i % 1000 == 0) {
-                System.out.println((double) i / (double) runs * (double) 100 + "% complete.");
+        if (play) {
+            List<Integer> scores = new ArrayList<>();
+
+            for (int i = 0; i < runs; i++) {
+                scores.add(new Main().play());
+                if (i % 1000 == 0) {
+                    System.out.println((double) i / (double) runs * (double) 100 + "% complete.");
+                }
+            }
+
+            double average = scores
+                    .stream()
+                    .mapToDouble(a -> a)
+                    .average().isPresent() ? scores
+                    .stream()
+                    .mapToDouble(a -> a)
+                    .average().getAsDouble() : 0;
+
+            System.out.println("Average from " + runs + " runs: " + average + " rows.");
+        } else {
+            List<Situation> situations = new Main().teach();
+
+            situations.forEach(System.out::println);
+
+            assert situations != null;
+
+            int c = 0;
+
+            // For each situation
+            for (Situation situation : situations) {
+                // Save the situation as a png
+
+                System.out.println("Saving situation " + c + ", which looks like " + situation + "");
+
+                ImageInfo info = new ImageInfo(Constants.BOARD_WIDTH, Constants.BOARD_HEIGHT, 8, true);
+                PngWriter pngw = new PngWriter(new File("situation" + c + "_q_" + situation.getQuality() + ".png"), info, true);
+                for (int i = 0; i < Constants.BOARD_HEIGHT; i++) {
+                    int[] rgbs = new int[Constants.BOARD_WIDTH];
+
+                    for (int j = 0; j < Constants.BOARD_WIDTH; j++) {
+                        rgbs[j] = situation.getBoard()[i][j] == 'X' ? new Color(0, 0, 0).getRGB() : new Color(255, 255, 255).getRGB();
+                    }
+
+                    ImageLineInt line = new ImageLineInt(info);
+                    for (int k = 0; k < rgbs.length; k++) {
+                        ImageLineHelper.setPixelRGBA8(line, k, rgbs[k]);
+                    }
+
+                    pngw.writeRow(line, i);
+                }
+                pngw.end();
+
+                c++;
             }
         }
-
-        double average = scores
-                .stream()
-                .mapToDouble(a -> a)
-                .average().isPresent() ? scores
-                .stream()
-                .mapToDouble(a -> a)
-                .average().getAsDouble() : 0;
-
-        System.out.println("Average from " + runs + " runs: " + average + " rows.");
-
-//        List<Move> moves = new Main().teach();
-
-//        if (moves != null) {
-//            moves.forEach(System.out::println);
-//        }
     }
 
     private int play() throws InterruptedException, NonexistentTetrisPieceException {
@@ -105,8 +148,8 @@ public class Main {
         }
     }
 
-    private List<Move> teach() throws NonexistentTetrisPieceException, InterruptedException {
-        List<Move> moves = new ArrayList<>();
+    private List<Situation> teach() throws NonexistentTetrisPieceException, InterruptedException {
+        List<Situation> situations = new ArrayList<>();
 
         if (!displayGame) { // Can't teach if the board isn't allowed to show
             System.out.println("Board can't be displayed. Set displayGame to true.");
@@ -132,20 +175,27 @@ public class Main {
             }
 
             // Print the current board to the JTextArea
-            if (displayGame) {
+            if (displayGame && Utils.shouldDisplayBoard()) {
                 printedTetrisBoard.setText(api.getBoard().toString());
 
-                Thread.sleep(1000);
+
+                System.out.println("AEEIEOU " + Arrays.deepToString(currentBoard));
+
+
+                System.out.println("What is the quality of the current situation? {1, 2, 3, 4, 5}");
+                int moveQuality = in.nextInt();
+
+                situations.add(new Situation(currentBoard, moveQuality));
             }
-
-
-            System.out.println("What was the move quality? {1, 2, 3}");
-            int moveQuality = in.nextInt();
-
-            moves.add(new Move(currentBoard, lowestPosition, moveQuality));
         }
 
-        return moves;
+        System.out.println("ASDSADSADASDSAD");
+        for (Situation s : situations) {
+            System.out.println("ASDASD" + s);
+        }
+        System.out.println("DASDSADASDSADDS");
+
+        return situations;
     }
 
     private Coords[] lowest(List<PositionRows> positions) {
