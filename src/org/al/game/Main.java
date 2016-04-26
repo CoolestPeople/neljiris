@@ -10,7 +10,6 @@ import org.al.generic.Coords;
 import org.al.quadrisbase.Board;
 import org.al.quadrisbase.Piece;
 import org.al.quadrisexceptions.NonexistentTetrisPieceException;
-<<<<<<< HEAD
 import org.al.statisticsutils.Deviation;
 import org.al.training.Move;
 
@@ -18,7 +17,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
-=======
 import org.al.training.Situation;
 import org.al.training.Utils;
 
@@ -26,7 +24,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.util.*;
->>>>>>> origin/ann
 import java.util.List;
 
 public class Main {
@@ -69,12 +66,10 @@ public class Main {
         }
 
 
-<<<<<<< HEAD
         for (int i = 0; i < runs; i++) {
             scores.add(new Main().playBetter());
             if (i % 1000 == 0) {
                 System.out.println((double) i / (double) runs * (double) 100 + "% complete.");
-=======
         if (play) {
             List<Integer> scores = new ArrayList<>();
 
@@ -83,7 +78,6 @@ public class Main {
                 if (i % 1000 == 0) {
                     System.out.println((double) i / (double) runs * (double) 100 + "% complete.");
                 }
->>>>>>> origin/ann
             }
 
             double average = scores
@@ -111,7 +105,6 @@ public class Main {
 
             int c = 0;
 
-<<<<<<< HEAD
         double maxscore = Collections.max(scores);
         double minscore = Collections.min(scores);
 
@@ -122,11 +115,9 @@ public class Main {
         System.out.println("Maximum from " + runs + " runs: " + maxscore + " rows.");
         System.out.println("Minimum from " + runs + " runs: " + minscore + " rows.");
         System.out.println("Standard deviation from " + runs + " runs: " + deviation + " rows.");
-=======
             // For each situation
             for (Situation situation : situations) {
                 // Save the situation as a png
->>>>>>> origin/ann
 
                 ImageInfo info = new ImageInfo(Constants.BOARD_WIDTH, Constants.BOARD_HEIGHT, 8, true);
                 PngWriter pngw = new PngWriter(new File(org.al.etc.Constants.USER_DIR + "/situations/situation" + c + "_q_" + situation.getQuality() + ".png"), info, true);
