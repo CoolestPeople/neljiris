@@ -1,10 +1,16 @@
 package org.al.game;
 
+import ar.com.hjg.pngj.ImageInfo;
+import ar.com.hjg.pngj.ImageLineHelper;
+import ar.com.hjg.pngj.ImageLineInt;
+import ar.com.hjg.pngj.PngWriter;
 import org.al.api.Api;
+import org.al.quadrisbase.Constants;
 import org.al.generic.Coords;
 import org.al.quadrisbase.Board;
 import org.al.quadrisbase.Piece;
 import org.al.quadrisexceptions.NonexistentTetrisPieceException;
+<<<<<<< HEAD
 import org.al.statisticsutils.Deviation;
 import org.al.training.Move;
 
@@ -12,13 +18,24 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
+=======
+import org.al.training.Situation;
+import org.al.training.Utils;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
+import java.util.*;
+>>>>>>> origin/ann
 import java.util.List;
-import java.util.Scanner;
 
 public class Main {
     private static final int runs = 100;
 
     private static boolean displayGame = false;
+
+    private static boolean teach = true;
+    private static boolean play = !teach;
 
     private static JTextArea printedTetrisBoard;
     private static Scanner in;
@@ -51,23 +68,50 @@ public class Main {
             frame.setLocationRelativeTo(null);
         }
 
-        List<Integer> scores = new ArrayList<>();
 
+<<<<<<< HEAD
         for (int i = 0; i < runs; i++) {
             scores.add(new Main().playBetter());
             if (i % 1000 == 0) {
                 System.out.println((double) i / (double) runs * (double) 100 + "% complete.");
+=======
+        if (play) {
+            List<Integer> scores = new ArrayList<>();
+
+            for (int i = 0; i < runs; i++) {
+                scores.add(new Main().play());
+                if (i % 1000 == 0) {
+                    System.out.println((double) i / (double) runs * (double) 100 + "% complete.");
+                }
+>>>>>>> origin/ann
             }
-        }
 
-        double average = scores
-                .stream()
-                .mapToDouble(a -> a)
-                .average().isPresent() ? scores
-                .stream()
-                .mapToDouble(a -> a)
-                .average().getAsDouble() : 0;
+            double average = scores
+                    .stream()
+                    .mapToDouble(a -> a)
+                    .average().isPresent() ? scores
+                    .stream()
+                    .mapToDouble(a -> a)
+                    .average().getAsDouble() : 0;
 
+            System.out.println("Average from " + runs + " runs: " + average + " rows.");
+        } else {
+            List<Situation> situations = new Main().teach();
+
+            assert situations != null;
+
+
+
+            // SAVE THE SITUATIONS TO PNGS     TODO: Make this into a function
+
+
+            // Make the directory for saving the images
+            new File(org.al.etc.Constants.USER_DIR + "/situations").mkdirs();
+
+
+            int c = 0;
+
+<<<<<<< HEAD
         double maxscore = Collections.max(scores);
         double minscore = Collections.min(scores);
 
@@ -78,12 +122,33 @@ public class Main {
         System.out.println("Maximum from " + runs + " runs: " + maxscore + " rows.");
         System.out.println("Minimum from " + runs + " runs: " + minscore + " rows.");
         System.out.println("Standard deviation from " + runs + " runs: " + deviation + " rows.");
+=======
+            // For each situation
+            for (Situation situation : situations) {
+                // Save the situation as a png
+>>>>>>> origin/ann
 
-//        List<Move> moves = new Main().teach();
+                ImageInfo info = new ImageInfo(Constants.BOARD_WIDTH, Constants.BOARD_HEIGHT, 8, true);
+                PngWriter pngw = new PngWriter(new File(org.al.etc.Constants.USER_DIR + "/situations/situation" + c + "_q_" + situation.getQuality() + ".png"), info, true);
+                for (int i = 0; i < Constants.BOARD_HEIGHT; i++) {
+                    int[] rgbs = new int[Constants.BOARD_WIDTH];
 
-//        if (moves != null) {
-//            moves.forEach(System.out::println);
-//        }
+                    for (int j = 0; j < Constants.BOARD_WIDTH; j++) {
+                        rgbs[j] = situation.getBoard()[i][j] == 'X' ? new Color(0, 0, 0).getRGB() : new Color(255, 255, 255).getRGB();
+                    }
+
+                    ImageLineInt line = new ImageLineInt(info);
+                    for (int k = 0; k < rgbs.length; k++) {
+                        ImageLineHelper.setPixelRGBA8(line, k, rgbs[k]);
+                    }
+
+                    pngw.writeRow(line, i);
+                }
+                pngw.end();
+
+                c++;
+            }
+        }
     }
 
     private int play() throws InterruptedException, NonexistentTetrisPieceException {
@@ -103,7 +168,6 @@ public class Main {
             boolean placed = api.placePiece(lowestPosition);
 
             if (!placed) { // Game lost
-//                System.out.println("Final score: " + api.getScore() + ".");
                 printedTetrisBoard.setText(api.getBoard().toString());
                 return api.getScore();
             }
@@ -117,8 +181,8 @@ public class Main {
         }
     }
 
-    private List<Move> teach() throws NonexistentTetrisPieceException, InterruptedException {
-        List<Move> moves = new ArrayList<>();
+    private List<Situation> teach() throws NonexistentTetrisPieceException, InterruptedException {
+        List<Situation> situations = new LinkedList<>();
 
         if (!displayGame) { // Can't teach if the board isn't allowed to show
             System.out.println("Board can't be displayed. Set displayGame to true.");
@@ -131,8 +195,6 @@ public class Main {
         api.newGame();
 
         while (true) {
-            char[][] currentBoard = api.getBoard().getBoard();
-
             Piece currentPiece = api.getPiece();
 
             Coords[] lowestPosition = getMoveByGetLowest(api, currentPiece);
@@ -144,20 +206,26 @@ public class Main {
             }
 
             // Print the current board to the JTextArea
-            if (displayGame) {
+            if (displayGame && Utils.shouldDisplayBoard()) {
                 printedTetrisBoard.setText(api.getBoard().toString());
 
-                Thread.sleep(1000);
+                System.out.println("What is the quality of the current situation? {1, 2, 3, 4, 5}");
+                int moveQuality = in.nextInt();
+
+                // Ohh boy Java and I have an intense love-hate relationship
+                situations.add(new Situation(api.getBoard().boardClone().getBoard().clone(), moveQuality));
             }
-
-
-            System.out.println("What was the move quality? {1, 2, 3}");
-            int moveQuality = in.nextInt();
-
-            moves.add(new Move(currentBoard, lowestPosition, moveQuality));
         }
 
-        return moves;
+        System.out.println("The situations at the end of the teach method are as follows:");
+
+        for (int i = 0; i < situations.size() - 1; i++) {
+            if (Arrays.deepEquals(situations.get(i).getBoard(), situations.get(i + 1).getBoard())) {
+                System.err.println(":(");
+            }
+        }
+
+        return situations;
     }
 
     private Coords[] lowest(List<PositionRows> positions) {
@@ -194,7 +262,6 @@ public class Main {
 
         for (int i = 1; i < possiblePositions.size(); i++) {
             Coords[] anotherPosition = possiblePositions.get(i);
-//                System.out.println(Arrays.toString(anotherPosition));
 
             int lowestOfLowestPosition = lowestPosition[0].r;
             int lowestOfAnotherPosition = anotherPosition[0].r;
