@@ -5,8 +5,8 @@ import ar.com.hjg.pngj.ImageLineHelper;
 import ar.com.hjg.pngj.ImageLineInt;
 import ar.com.hjg.pngj.PngWriter;
 import org.al.api.Api;
-import org.al.generic.Coords;
 import org.al.quadrisbase.Constants;
+import org.al.generic.Coords;
 import org.al.quadrisbase.Piece;
 import org.al.quadrisexceptions.NonexistentTetrisPieceException;
 import org.al.training.Situation;
@@ -15,10 +15,8 @@ import org.al.training.Utils;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 import java.util.List;
-import java.util.Scanner;
 
 public class Main {
     private static final int runs = 1;
@@ -82,9 +80,16 @@ public class Main {
         } else {
             List<Situation> situations = new Main().teach();
 
-            situations.forEach(System.out::println);
-
             assert situations != null;
+
+
+
+            // SAVE THE SITUATIONS TO PNGS     TODO: Make this into a function
+
+
+            // Make the directory for saving the images
+            new File(org.al.etc.Constants.USER_DIR + "/situations").mkdirs();
+
 
             int c = 0;
 
@@ -92,10 +97,8 @@ public class Main {
             for (Situation situation : situations) {
                 // Save the situation as a png
 
-                System.out.println("Saving situation " + c + ", which looks like " + situation + "");
-
                 ImageInfo info = new ImageInfo(Constants.BOARD_WIDTH, Constants.BOARD_HEIGHT, 8, true);
-                PngWriter pngw = new PngWriter(new File("situation" + c + "_q_" + situation.getQuality() + ".png"), info, true);
+                PngWriter pngw = new PngWriter(new File(org.al.etc.Constants.USER_DIR + "/situations/situation" + c + "_q_" + situation.getQuality() + ".png"), info, true);
                 for (int i = 0; i < Constants.BOARD_HEIGHT; i++) {
                     int[] rgbs = new int[Constants.BOARD_WIDTH];
 
@@ -134,7 +137,6 @@ public class Main {
             boolean placed = api.placePiece(lowestPosition);
 
             if (!placed) { // Game lost
-//                System.out.println("Final score: " + api.getScore() + ".");
                 printedTetrisBoard.setText(api.getBoard().toString());
                 return api.getScore();
             }
@@ -149,7 +151,7 @@ public class Main {
     }
 
     private List<Situation> teach() throws NonexistentTetrisPieceException, InterruptedException {
-        List<Situation> situations = new ArrayList<>();
+        List<Situation> situations = new LinkedList<>();
 
         if (!displayGame) { // Can't teach if the board isn't allowed to show
             System.out.println("Board can't be displayed. Set displayGame to true.");
@@ -162,8 +164,6 @@ public class Main {
         api.newGame();
 
         while (true) {
-            char[][] currentBoard = api.getBoard().getBoard();
-
             Piece currentPiece = api.getPiece();
 
             Coords[] lowestPosition = getMoveByGetLowest(api, currentPiece);
@@ -178,22 +178,21 @@ public class Main {
             if (displayGame && Utils.shouldDisplayBoard()) {
                 printedTetrisBoard.setText(api.getBoard().toString());
 
-
-                System.out.println("AEEIEOU " + Arrays.deepToString(currentBoard));
-
-
                 System.out.println("What is the quality of the current situation? {1, 2, 3, 4, 5}");
                 int moveQuality = in.nextInt();
 
-                situations.add(new Situation(currentBoard, moveQuality));
+                // Ohh boy Java and I have an intense love-hate relationship
+                situations.add(new Situation(api.getBoard().boardClone().getBoard().clone(), moveQuality));
             }
         }
 
-        System.out.println("ASDSADSADASDSAD");
-        for (Situation s : situations) {
-            System.out.println("ASDASD" + s);
+        System.out.println("The situations at the end of the teach method are as follows:");
+
+        for (int i = 0; i < situations.size() - 1; i++) {
+            if (Arrays.deepEquals(situations.get(i).getBoard(), situations.get(i + 1).getBoard())) {
+                System.err.println(":(");
+            }
         }
-        System.out.println("DASDSADASDSADDS");
 
         return situations;
     }
@@ -232,7 +231,6 @@ public class Main {
 
         for (int i = 1; i < possiblePositions.size(); i++) {
             Coords[] anotherPosition = possiblePositions.get(i);
-//                System.out.println(Arrays.toString(anotherPosition));
 
             int lowestOfLowestPosition = lowestPosition[0].r;
             int lowestOfAnotherPosition = anotherPosition[0].r;
