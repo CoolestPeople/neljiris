@@ -17,6 +17,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
+
 import org.al.training.Situation;
 import org.al.training.Utils;
 
@@ -29,9 +30,9 @@ import java.util.List;
 public class Main {
     private static final int runs = 100;
 
-    private static boolean displayGame = false;
+    private static boolean displayGame = true;
 
-    private static boolean teach = true;
+    private static boolean teach = false;
     private static boolean play = !teach;
 
     private static JTextArea printedTetrisBoard;
@@ -66,15 +67,11 @@ public class Main {
         }
 
 
-        for (int i = 0; i < runs; i++) {
-            scores.add(new Main().playBetter());
-            if (i % 1000 == 0) {
-                System.out.println((double) i / (double) runs * (double) 100 + "% complete.");
         if (play) {
             List<Integer> scores = new ArrayList<>();
 
             for (int i = 0; i < runs; i++) {
-                scores.add(new Main().play());
+                scores.add(new Main().playBetter());
                 if (i % 1000 == 0) {
                     System.out.println((double) i / (double) runs * (double) 100 + "% complete.");
                 }
@@ -88,12 +85,22 @@ public class Main {
                     .mapToDouble(a -> a)
                     .average().getAsDouble() : 0;
 
+            double maxscore = Collections.max(scores);
+            double minscore = Collections.min(scores);
+
+            Deviation dev = new Deviation();
+            double deviation = dev.findDeviation(scores.stream().mapToDouble(d -> d).toArray()); //identity function, Java unboxes automatically to get the double value);
+
+
             System.out.println("Average from " + runs + " runs: " + average + " rows.");
+            System.out.println("Maximum from " + runs + " runs: " + maxscore + " rows.");
+            System.out.println("Minimum from " + runs + " runs: " + minscore + " rows.");
+            System.out.println("Standard deviation from " + runs + " runs: " + deviation + " rows.");
+
         } else {
             List<Situation> situations = new Main().teach();
 
             assert situations != null;
-
 
 
             // SAVE THE SITUATIONS TO PNGS     TODO: Make this into a function
@@ -105,16 +112,6 @@ public class Main {
 
             int c = 0;
 
-        double maxscore = Collections.max(scores);
-        double minscore = Collections.min(scores);
-
-        Deviation dev = new Deviation();
-        double deviation = dev.findDeviation(scores.stream().mapToDouble(d -> d).toArray()); //identity function, Java unboxes automatically to get the double value);
-
-        System.out.println("Average from " + runs + " runs: " + average + " rows.");
-        System.out.println("Maximum from " + runs + " runs: " + maxscore + " rows.");
-        System.out.println("Minimum from " + runs + " runs: " + minscore + " rows.");
-        System.out.println("Standard deviation from " + runs + " runs: " + deviation + " rows.");
             // For each situation
             for (Situation situation : situations) {
                 // Save the situation as a png
@@ -315,14 +312,12 @@ public class Main {
                             decision_bottom = bottom;
                             decision = current;
                         }
-                    }
-                    else {
+                    } else {
                         decision_no_holes = true;
                         decision_bottom = bottom;
                         decision = current;
                     }
-                }
-                else {
+                } else {
                     if (no_holes) {
                         if (bottom > decision_bottom) {
                             decision_bottom = bottom;
@@ -343,7 +338,7 @@ public class Main {
             if (displayGame) {
                 printedTetrisBoard.setText(api.getBoard().toString());
 
-                Thread.sleep(500);
+                Thread.sleep(250);
             }
         }
     }
