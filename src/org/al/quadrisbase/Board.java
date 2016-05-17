@@ -108,6 +108,9 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
     // for each square in the tetronimo.
     public List<Coords[]> possibleMoves(Piece piece) throws NonexistentTetrisPieceException {
         List<Coords[]> possible_moves = new ArrayList<>();
+        if (isLost())
+            return possible_moves;
+
         for (int rot = 0; rot < 4; rot++) {
             Piece cur_piece = new Piece(piece.getType(), rot);
             Coords[] spaces = getSpaces(cur_piece).clone();
@@ -188,15 +191,30 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
         for (int r = 0; r < 4; r++) {
             for (int c = 0; c < board[r].length; c++) {
                 if (board[r][c] == 'X') {
-                    System.out.println("There's an 'X' at row " + r + ", column " + c + ", s the game is lost.");
-                    System.out.println("Here's the board:");
-                    System.out.println(this);
                     return true;
                 }
             }
         }
 
         return false;
+    }
+
+    /**
+     * Defined to be won if all filled in squares are in the bottom WON_THRESHOLD rows (can change this)
+     *
+     * @return true if game is won (board almost empty), false otherwise
+     */
+    // COMPLETE
+    public boolean isWon() {
+        for (int r = 0; r < board.length - org.al.etc.Constants.WON_THRESHOLD; r++) {
+            for (int c = 0; c < board[r].length; c++) {
+                if (board[r][c] == 'X') {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
 
@@ -251,6 +269,7 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
 
     /**
      * Returns how many rows will be filled if a piece is placed in a certain place
+     *
      * @param pieceCoords - the coordinates of the piece
      * @return - the number of rows that will be filled
      */
@@ -351,5 +370,18 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
 
     public int getScore() {
         return num_completed_rows;
+    }
+
+    public MiniBoard toMiniBoard(char pieceType) {
+        int[] topRow = new int[board[0].length];
+
+        for (int i = 0; i < board[0].length; i++) {
+            int j;
+            for (j = 0; (j >= board.length) ? false : board[j][i] == '.'; j++)
+                ;
+            topRow[i] = j;
+        }
+
+        return new MiniBoard(topRow, pieceType);
     }
 }
