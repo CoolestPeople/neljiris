@@ -3,14 +3,17 @@ package org.al.game;
 import org.al.api.Api;
 import org.al.generic.Coords;
 import org.al.quadrisbase.Board;
+import org.al.quadrisbase.Constants;
 import org.al.quadrisbase.MiniBoard;
 import org.al.quadrisbase.Piece;
 import org.al.quadrisexceptions.NonexistentTetrisPieceException;
+import org.al.quadrisutils.Audio;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.MutablePair;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +33,7 @@ public class Main {
     private static int numGames = 0;
 
 
-    public static void main(String[] args) throws InterruptedException, ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException, NonexistentTetrisPieceException {
+    public static void main(String[] args) throws InterruptedException, ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException, NonexistentTetrisPieceException, IOException {
         /* App init stuff */
 
         init();
@@ -52,8 +55,8 @@ public class Main {
 
             printedTetrisBoard.setFont(new Font("monospaced", Font.PLAIN, 12));
 
-            printedTetrisBoard.setColumns(10);
-            printedTetrisBoard.setRows(20);
+            printedTetrisBoard.setColumns(Constants.BOARD_WIDTH);
+            printedTetrisBoard.setRows(Constants.BOARD_HEIGHT);
 
             frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             frame.setLayout(new GridLayout());
@@ -124,7 +127,7 @@ public class Main {
         return optimalDecisions.get(ThreadLocalRandom.current().nextInt(0, optimalDecisions.size()));
     }
 
-    private String qLearn(int numRuns) throws NonexistentTetrisPieceException, InterruptedException {
+    private String qLearn(int numRuns) throws NonexistentTetrisPieceException, InterruptedException, IOException {
         int k = numRuns;
         int c = 0;
         int o = 0;
@@ -138,7 +141,13 @@ public class Main {
             }
 
 
-            displayGame = numRuns % 10000 == 0;
+            displayGame = numRuns % 100000 == 0;
+            if (displayGame) {
+                Audio.playNotification();
+                String[] cmd = {"say", "The size of the Q matrix is " + qMap.size() + " at the moment."};
+                Runtime.getRuntime().exec(cmd);
+                System.out.println(qMap.size());
+            }
 
             Api api = new Api();
             api.newGame();
@@ -183,7 +192,7 @@ public class Main {
                 if (displayGame) {
                     printedTetrisBoard.setText(api.getBoard().toString());
 
-                    Thread.sleep(250);
+                    Thread.sleep(1000);
                 }
             }
 

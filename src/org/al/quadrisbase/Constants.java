@@ -9,6 +9,6 @@ public class Constants {
     public static final char PIECE_T = 'T';
     public static final char PIECE_Z = 'Z';
 
-    public static final int BOARD_WIDTH = 10;
-    public static final int BOARD_HEIGHT = 20;
+    public static final int BOARD_WIDTH = 4;
+    public static final int BOARD_HEIGHT = 15;
 }
