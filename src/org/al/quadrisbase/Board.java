@@ -284,13 +284,13 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
     }
 
 
+
     private void deleteFullRows() {
         for (int row : getCompleteRows()) {
             num_completed_rows++;
             deleteRowAndShift(row);
         }
     }
-
     private void deleteRowAndShift(int row) {
         for (int i = 0; i < board[row].length; i++) {
             board[row][i] = '.';

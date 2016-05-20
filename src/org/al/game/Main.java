@@ -3,6 +3,7 @@ package org.al.game;
 import org.al.api.Api;
 import org.al.generic.Coords;
 import org.al.quadrisbase.Board;
+import org.al.quadrisbase.Constants;
 import org.al.quadrisbase.MiniBoard;
 import org.al.quadrisbase.Piece;
 import org.al.quadrisexceptions.NonexistentTetrisPieceException;
@@ -35,7 +36,7 @@ public class Main {
 
         init();
 
-        int curNumRuns = 10 * 100000;
+        int curNumRuns = 10000000;
         System.out.println(new Main().qLearn(curNumRuns));
 
 
@@ -52,8 +53,8 @@ public class Main {
 
             printedTetrisBoard.setFont(new Font("monospaced", Font.PLAIN, 12));
 
-            printedTetrisBoard.setColumns(10);
-            printedTetrisBoard.setRows(20);
+            printedTetrisBoard.setColumns(Constants.BOARD_WIDTH);
+            printedTetrisBoard.setRows(Constants.BOARD_HEIGHT);
 
             frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             frame.setLayout(new GridLayout());
@@ -134,7 +135,7 @@ public class Main {
             int percentDone = c * 100 / k;
             if (o != percentDone) {
                 o = percentDone;
-                System.out.println(o + "% complete.");
+                System.out.println(o + "% complete." + " Map size: " + qMap.size());
             }
 
 
@@ -162,7 +163,9 @@ public class Main {
                     decision = possiblePositions.get(ThreadLocalRandom.current().nextInt(0, possiblePositions.size()));
                 }
 
-                alpha = 1 / (numQVisits(api.getBoard(), pieceType, decision) + 1); // Includes current visit, hence the + 1
+                // alpha = 1 / (numQVisits(api.getBoard(), pieceType, decision) + 1); // Includes current visit, hence the + 1
+                alpha = 0.5; // for testing
+                gamma = 0.5; // for testing
 
                 Board old_board = api.getBoard().boardClone();
 
@@ -174,16 +177,17 @@ public class Main {
                 int newQValue = (int) (oldQValue + alpha * (R(old_board, decision) + gamma * bestFutureAction(api.getBoard()) - oldQValue));
                 setQ(old_board, pieceType, decision, newQValue);
 
-                if (!placed) { // Game lost
-//                System.out.println("Final score: " + api.getScore() + ".");
-                    break;
-                }
-
                 // Print the current board to the JTextArea
                 if (displayGame) {
                     printedTetrisBoard.setText(api.getBoard().toString());
 
                     Thread.sleep(250);
+                }
+
+
+                if (!placed) { // Game lost
+//                System.out.println("Final score: " + api.getScore() + ".");
+                    break;
                 }
             }
 
@@ -195,22 +199,27 @@ public class Main {
 
     }
 
+    // Average of best future actions for each possible future piece type
     private int bestFutureAction(Board cur_board) throws NonexistentTetrisPieceException {
-        Piece cur_piece = cur_board.boardClone().getPiece();
-        char pieceType = cur_piece.getType();
-        List<Coords[]> possiblePositions = cur_board.possibleMoves(cur_piece);
+        int averageBest = 0;
+        char[] possible_futures = {Constants.PIECE_I, Constants.PIECE_J, Constants.PIECE_L, Constants.PIECE_O, Constants.PIECE_S, Constants.PIECE_T, Constants.PIECE_Z};
+        for (char pieceType : possible_futures) {
+            Piece cur_piece = new Piece(pieceType, 0);
+            List<Coords[]> possiblePositions = cur_board.possibleMoves(cur_piece);
 
-        int maxQValue = -100;
+            int maxQValue = -100;
 
-        for (Coords[] cur_decision : possiblePositions) {
-            Board tester = cur_board.boardClone();
-            tester.placePiece(cur_decision);
+            for (Coords[] cur_decision : possiblePositions) {
+                Board tester = cur_board.boardClone();
+                tester.placePiece(cur_decision);
 
-            int qLookupResult = Q(tester, pieceType, cur_decision);
+                int qLookupResult = Q(tester, pieceType, cur_decision);
 
-            maxQValue = Math.max(maxQValue, qLookupResult);
+                maxQValue = Math.max(maxQValue, qLookupResult);
+            }
+
+            averageBest += maxQValue;
         }
-
-        return maxQValue;
+        return averageBest / possible_futures.length;
     }
 }
