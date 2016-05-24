@@ -1,5 +1,6 @@
 package org.al.game;
 
+import com.sun.istack.internal.NotNull;
 import org.al.api.Api;
 import org.al.generic.Coords;
 import org.al.quadrisbase.Board;
@@ -8,14 +9,12 @@ import org.al.quadrisbase.MiniBoard;
 import org.al.quadrisbase.Piece;
 import org.al.quadrisexceptions.NonexistentTetrisPieceException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Main {
@@ -27,7 +26,7 @@ public class Main {
     private static double gamma = 1;
 
     // left is Q value, second is right of visits
-    private static Map<ImmutablePair<MiniBoard, Coords[]>, MutablePair<Integer, Integer>> qMap = new HashMap<>();
+    private static Map<ImmutablePair<MiniBoard, Integer>, ImmutablePair<Integer, Integer>> qMap = new HashMap<>();
     private static int numGames = 0;
 
 
@@ -36,7 +35,7 @@ public class Main {
 
         init();
 
-        int curNumRuns = 10000000;
+        int curNumRuns = 1000000;
         System.out.println(new Main().qLearn(curNumRuns));
 
 
@@ -80,29 +79,32 @@ public class Main {
         }
     }
 
+    private static int hash(Coords[] pieceCoords) {
+        return Arrays.hashCode(pieceCoords);
+    }
+
     private static int Q(Board b, char pieceType, Coords[] decision) {
-        MutablePair<Integer, Integer> entry = qMap.get(new ImmutablePair<>(b.toMiniBoard(pieceType), decision));
+        ImmutablePair<Integer, Integer> entry = qMap.get(new ImmutablePair<>(b.toMiniBoard(pieceType), hash(decision)));
+//        if (entry != null)
+//            System.out.println("IT WORKED!!!!");
         Integer result = (entry == null) ? null : entry.getLeft();
         return (result != null) ? result : 0;
     }
 
     private static int numQVisits(Board b, char pieceType, Coords[] decision) {
-        MutablePair<Integer, Integer> entry = qMap.get(new ImmutablePair<>(b.toMiniBoard(pieceType), decision));
+        ImmutablePair<Integer, Integer> entry = qMap.get(new ImmutablePair<>(b.toMiniBoard(pieceType), hash(decision)));
         Integer result = (entry == null) ? null : entry.getRight();
         return (result != null) ? result : 0;
     }
 
     private static void setQ(Board b, char pieceType, Coords[] decision, int value) {
-        MutablePair<Integer, Integer> entry = qMap.get(new ImmutablePair<>(b.toMiniBoard(pieceType), decision));
+        ImmutablePair<Integer, Integer> entry = qMap.get(new ImmutablePair<>(b.toMiniBoard(pieceType), hash(decision)));
         if (entry == null) {
-            entry = new MutablePair<>();
-            entry.setLeft(value);
-            entry.setRight(1);
-            qMap.put(new ImmutablePair<>(b.toMiniBoard(pieceType), decision), entry);
+            entry = new ImmutablePair<>(value, 1);
+            qMap.put(new ImmutablePair<>(b.toMiniBoard(pieceType), hash(decision)), entry);
         } else {
-            entry.setLeft(value);
-            entry.setRight(entry.getLeft() + 1);
-            qMap.put(new ImmutablePair<>(b.toMiniBoard(pieceType), decision), entry);
+            entry = new ImmutablePair<>(value, entry.getRight() + 1);
+            qMap.put(new ImmutablePair<>(b.toMiniBoard(pieceType), hash(decision)), entry);
         }
     }
 
@@ -130,12 +132,20 @@ public class Main {
         int c = 0;
         int o = 0;
 
-        while (numRuns-- > 0) { // while loop goes through numRuns loops
+        int numRows = 0;
+        int numCurRuns = 0;
+        int numAlreadyVisited = 0;
+        int numTotalVisits = 0;
+
+        while (numRuns --> 0) { // while loop goes through numRuns loops
             c++;
+            numCurRuns++;
             int percentDone = c * 100 / k;
             if (o != percentDone) {
                 o = percentDone;
-                System.out.println(o + "% complete." + " Map size: " + qMap.size());
+                System.out.println(o + "% complete." + " Map size: " + qMap.size() + " Average score: " + (double)(numRows) / (numCurRuns)
+                        + " " + (1 - (double)(numAlreadyVisited)/(numTotalVisits)) * 100 + "% first time visits");
+                numRows = numCurRuns = 0;
             }
 
 
@@ -156,6 +166,13 @@ public class Main {
 
                 // SET decision HERE
 
+//                // Start test
+//
+//                setQ(api.getBoard(), pieceType, decision, 3);
+//                System.out.println("This should be 3: " + Q(api.getBoard().boardClone(), pieceType, decision.clone()));
+//
+//                // End test
+
                 if (Math.random() < 1 - epsilon) { // Take optimal action
                     decision = optimalAction(api.getBoard(), possiblePositions, pieceType);
 
@@ -163,7 +180,10 @@ public class Main {
                     decision = possiblePositions.get(ThreadLocalRandom.current().nextInt(0, possiblePositions.size()));
                 }
 
-                // alpha = 1 / (numQVisits(api.getBoard(), pieceType, decision) + 1); // Includes current visit, hence the + 1
+                alpha = 1.0 / (numQVisits(api.getBoard(), pieceType, decision) + 1); // Includes current visit, hence the + 1
+                if (alpha < 0.9)
+                    numAlreadyVisited++;
+                numTotalVisits++;
                 alpha = 0.5; // for testing
                 gamma = 0.5; // for testing
 
@@ -177,6 +197,8 @@ public class Main {
                 int newQValue = (int) (oldQValue + alpha * (R(old_board, decision) + gamma * bestFutureAction(api.getBoard()) - oldQValue));
                 setQ(old_board, pieceType, decision, newQValue);
 
+//                System.out.println(oldQValue);
+
                 // Print the current board to the JTextArea
                 if (displayGame) {
                     printedTetrisBoard.setText(api.getBoard().toString());
@@ -187,6 +209,7 @@ public class Main {
 
                 if (!placed) { // Game lost
 //                System.out.println("Final score: " + api.getScore() + ".");
+                    numRows += api.getScore();
                     break;
                 }
             }
