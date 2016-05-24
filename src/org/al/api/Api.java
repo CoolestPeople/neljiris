@@ -43,4 +43,8 @@ public class Api {
     public int tentativeRowsRemoved(Coords[] pieceCoords) {
         return board.tentativeRowsRemoved(pieceCoords);
     }
+
+    public double getAverageHeight() {
+        return board.getAverageHeight();
+    }
 }

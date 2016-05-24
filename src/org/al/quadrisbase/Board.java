@@ -2,9 +2,13 @@ package org.al.quadrisbase;
 
 import org.al.generic.Coords;
 import org.al.quadrisexceptions.NonexistentTetrisPieceException;
+import org.jetbrains.annotations.Contract;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.al.quadrisbase.Constants.BOARD_HEIGHT;
+import static org.al.quadrisbase.Constants.BOARD_WIDTH;
 
 public class Board { //TODO: Move ALL_SPACES to the Constants class
     private static Coords[][][] ALLSPACES =
@@ -47,7 +51,7 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
     private int num_completed_rows;
 
     public Board() {
-        board = new char[Constants.BOARD_HEIGHT][Constants.BOARD_WIDTH];
+        board = new char[BOARD_HEIGHT][BOARD_WIDTH];
         for (int r = 0; r < board.length; r++) {
             for (int c = 0; c < board[r].length; c++) {
                 board[r][c] = '.';
@@ -383,5 +387,31 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
         }
 
         return new MiniBoard(topRow, pieceType);
+    }
+
+    @Contract(pure = true)
+    private int getColumnHeightFromBottom(int column) {
+        for (int i = 0; i < BOARD_HEIGHT; i++) {
+            if (board[i][column] == 'X') {
+                return BOARD_HEIGHT - i;
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Based on the NUMBER OF BLOCKS in each column, NOT the index of the highest one.
+     * @return - the average height of the highest blocks in all of the columns
+     */
+    public double getAverageHeight() {
+        int total = 0;
+        for (int column = 0; column < BOARD_WIDTH; column++) {
+//            System.out.print(getColumnHeightFromBottom(column) + " ");
+            total += getColumnHeightFromBottom(column);
+        }
+//        System.out.println();
+
+        return (double) total / BOARD_WIDTH;
     }
 }

@@ -70,13 +70,30 @@ public class Main {
         Board bc = b.boardClone();
         bc.placePiece(decision);
 
+        double averageHeight = bc.getAverageHeight();
+
         if (bc.isLost()) {
             return -100;
         } else if (bc.isWon()) {
             return 100;
         } else {
-            return 0;
+            int numberOfRowsToScale = Constants.BOARD_HEIGHT - 4 - 2; // 4 rows give -100; 2 rows give +100
+            double scaleFactor = (double) 200 / (numberOfRowsToScale + 1);
+            double distanceFromTopOfScale = (double)Constants.BOARD_HEIGHT - (double)4 - averageHeight;
+            double reward = scaleFactor * distanceFromTopOfScale - 100;
+            return (int) Math.round(reward);
         }
+
+        /*
+        ORIGINAL VERSION
+            if (bc.isLost()) {
+                return -100;
+            } else if (bc.isWon()) {
+                return 100;
+            } else {
+                return 0;
+            }
+        */
     }
 
     private static int hash(Coords[] pieceCoords) {
