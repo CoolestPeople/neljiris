@@ -1,6 +1,5 @@
 package org.al.game;
 
-import com.sun.istack.internal.NotNull;
 import org.al.api.Api;
 import org.al.generic.Coords;
 import org.al.quadrisbase.Board;
@@ -9,10 +8,12 @@ import org.al.quadrisbase.MiniBoard;
 import org.al.quadrisbase.Piece;
 import org.al.quadrisexceptions.NonexistentTetrisPieceException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import javax.swing.*;
 import java.awt.*;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -21,6 +22,8 @@ public class Main {
     private static boolean displayGame = true;
 
     private static JTextArea printedTetrisBoard;
+    private static NumberFormat twoDecimalPoints;
+    private static NumberFormat threeDecimalPoints;
 
     private static double alpha = 0.5;
     private static double gamma = 1;
@@ -64,6 +67,20 @@ public class Main {
             frame.setVisible(true);
             frame.setLocationRelativeTo(null);
         }
+
+
+
+
+        // Set number formatters
+        twoDecimalPoints = DecimalFormat.getInstance();
+        twoDecimalPoints.setMinimumFractionDigits(2);
+        twoDecimalPoints.setMaximumFractionDigits(2);
+        twoDecimalPoints.setRoundingMode(RoundingMode.DOWN);
+
+        threeDecimalPoints = DecimalFormat.getInstance();
+        threeDecimalPoints.setMinimumFractionDigits(3);
+        threeDecimalPoints.setMaximumFractionDigits(3);
+        threeDecimalPoints.setRoundingMode(RoundingMode.DOWN);
     }
 
     private static int R(Board b, Coords[] decision) {
@@ -79,7 +96,7 @@ public class Main {
         } else {
             int numberOfRowsToScale = Constants.BOARD_HEIGHT - 4 - 2; // 4 rows give -100; 2 rows give +100
             double scaleFactor = (double) 200 / (numberOfRowsToScale + 1);
-            double distanceFromTopOfScale = (double)Constants.BOARD_HEIGHT - (double)4 - averageHeight;
+            double distanceFromTopOfScale = (double) Constants.BOARD_HEIGHT - (double) 4 - averageHeight;
             double reward = scaleFactor * distanceFromTopOfScale - 100;
             return (int) Math.round(reward);
         }
@@ -154,14 +171,15 @@ public class Main {
         int numAlreadyVisited = 0;
         int numTotalVisits = 0;
 
-        while (numRuns --> 0) { // while loop goes through numRuns loops
+        while (numRuns-- > 0) { // while loop goes through numRuns loops
             c++;
             numCurRuns++;
             int percentDone = c * 100 / k;
             if (o != percentDone) {
                 o = percentDone;
-                System.out.println(o + "% complete." + " Map size: " + qMap.size() + " Average score: " + (double)(numRows) / (numCurRuns)
-                        + " " + (1 - (double)(numAlreadyVisited)/(numTotalVisits)) * 100 + "% first time visits");
+
+                System.out.println(o + "% complete." + " Map size: " + qMap.size() + ". Average score: " + threeDecimalPoints.format((double) (numRows) / (numCurRuns))
+                        + ". " + twoDecimalPoints.format((1 - (double) (numAlreadyVisited) / (numTotalVisits)) * 100) + "% first time visits");
                 numRows = numCurRuns = 0;
             }
 
@@ -201,8 +219,8 @@ public class Main {
                 if (alpha < 0.9)
                     numAlreadyVisited++;
                 numTotalVisits++;
-                alpha = 0.5; // for testing
-                gamma = 0.5; // for testing
+//                alpha = 0.5; // for testing
+//                gamma = 0.5; // for testing
 
                 Board old_board = api.getBoard().boardClone();
 
