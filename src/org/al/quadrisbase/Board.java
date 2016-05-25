@@ -2,7 +2,6 @@ package org.al.quadrisbase;
 
 import org.al.generic.Coords;
 import org.al.quadrisexceptions.NonexistentTetrisPieceException;
-import org.jetbrains.annotations.Contract;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -389,7 +388,6 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
         return new MiniBoard(topRow, pieceType);
     }
 
-    @Contract(pure = true)
     private int getColumnHeightFromBottom(int column) {
         for (int i = 0; i < BOARD_HEIGHT; i++) {
             if (board[i][column] == 'X') {
@@ -413,5 +411,13 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
 //        System.out.println();
 
         return (double) total / BOARD_WIDTH;
+    }
+
+    public int getMaxHeight() {
+        int maxHeight = 0;
+        for (int i = 0; i < BOARD_WIDTH; i++) {
+            maxHeight = Math.max(maxHeight, getColumnHeightFromBottom(i));
+        }
+        return maxHeight;
     }
 }
