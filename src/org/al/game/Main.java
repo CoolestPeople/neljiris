@@ -11,6 +11,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.*;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -33,15 +34,38 @@ public class Main {
     private static int numGames = 0;
 
 
-    public static void main(String[] args) throws InterruptedException, ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException, NonexistentTetrisPieceException {
+    public static void main(String[] args) throws InterruptedException, ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException, NonexistentTetrisPieceException, IOException {
         /* App init stuff */
-
         init();
 
-        int curNumRuns = 1000000;
+        /* Regurgitate Q matrix */
+        regurgitate();
+
+        int curNumRuns = 100000;
         System.out.println(new Main().qLearn(curNumRuns));
 
+        save();
+    }
 
+    private static void regurgitate() throws IOException, ClassNotFoundException {
+        File qMatrixFile = new File("qMatrix.qmap");
+        if(qMatrixFile.exists() && !qMatrixFile.isDirectory()) {
+            FileInputStream f = new FileInputStream(qMatrixFile);
+            ObjectInputStream s = new ObjectInputStream(f);
+            qMap = (HashMap<ImmutablePair<MiniBoard, Integer>, ImmutablePair<Integer, Integer>>)s.readObject();
+            s.close();
+        }
+    }
+
+    private static void save() throws IOException {
+        File file = new File("qMatrix.qmap");
+        FileOutputStream f = new FileOutputStream(file);
+        ObjectOutputStream s = new ObjectOutputStream(f);
+        System.out.println("Saving map... (This will take a while, perhaps an hour)");
+        s.writeObject(qMap);
+        System.out.println("Finished writing object... flushing...");
+        s.flush();
+        System.out.println("Map saved.");
     }
 
     private static void init() throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException {
@@ -178,7 +202,7 @@ public class Main {
         return optimalDecisions.get(ThreadLocalRandom.current().nextInt(0, optimalDecisions.size()));
     }
 
-    private String qLearn(int numRuns) throws NonexistentTetrisPieceException, InterruptedException {
+    private String qLearn(int numRuns) throws NonexistentTetrisPieceException, InterruptedException, IOException {
         int k = numRuns;
         int c = 0;
         int o = 0;
@@ -201,7 +225,7 @@ public class Main {
             }
 
 
-            displayGame = numRuns % 10000 == 0;
+            displayGame = numRuns % 1000 == 0;
 
             Api api = new Api();
             api.newGame();
@@ -233,8 +257,9 @@ public class Main {
                 }
 
                 alpha = 1.0 / (numQVisits(api.getBoard(), pieceType, decision) + 1); // Includes current visit, hence the + 1
-                if (alpha < 0.9)
+                if (alpha < 0.9) {
                     numAlreadyVisited++;
+                }
                 numTotalVisits++;
 //                alpha = 0.5; // for testing
 //                gamma = 0.5; // for testing

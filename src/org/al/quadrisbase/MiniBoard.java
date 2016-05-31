@@ -1,11 +1,9 @@
 package org.al.quadrisbase;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
-/**
- * Created by lhscompsci on 5/10/16.
- */
-public class MiniBoard {
+public class MiniBoard implements Serializable {
     private int[] topRow;
     private char pieceType;
 
