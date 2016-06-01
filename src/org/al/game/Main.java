@@ -1,18 +1,24 @@
 package org.al.game;
 
 import org.al.api.Api;
+import org.al.config.Config;
 import org.al.generic.Coords;
 import org.al.quadrisbase.Board;
 import org.al.quadrisbase.Constants;
 import org.al.quadrisbase.MiniBoard;
 import org.al.quadrisbase.Piece;
 import org.al.quadrisexceptions.NonexistentTetrisPieceException;
+import org.al.save.Saver;
+import org.al.utils.Utils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.math.RoundingMode;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
@@ -20,7 +26,7 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Main {
-    private static boolean displayGame = true;
+    private static boolean displayGame;
 
     private static JTextArea printedTetrisBoard;
     private static NumberFormat twoDecimalPoints;
@@ -41,31 +47,40 @@ public class Main {
         /* Regurgitate Q matrix */
         regurgitate();
 
-        int curNumRuns = 100000;
+        int curNumRuns = Config.TOTAL_RUNS;
         System.out.println(new Main().qLearn(curNumRuns));
 
+        System.out.println("Saving...");
         save();
+        System.out.println("Saved!");
+    }
+
+    private static void save() {
+        System.out.print("Saving... ");
+        Saver s = new Saver(qMap);
+        new Thread(s).run();
+        System.out.println("Saved!");
     }
 
     private static void regurgitate() throws IOException, ClassNotFoundException {
-        File qMatrixFile = new File("qMatrix.qmap");
-        if(qMatrixFile.exists() && !qMatrixFile.isDirectory()) {
-            FileInputStream f = new FileInputStream(qMatrixFile);
-            ObjectInputStream s = new ObjectInputStream(f);
-            qMap = (HashMap<ImmutablePair<MiniBoard, Integer>, ImmutablePair<Integer, Integer>>)s.readObject();
-            s.close();
-        }
-    }
+        System.out.println(Utils.getBetween("dfhkjadfhldskajfhlksssvjRegurgitating...asdfdsddfsdf", "fhlksssvj", "asdfdsddf"));
 
-    private static void save() throws IOException {
-        File file = new File("qMatrix.qmap");
-        FileOutputStream f = new FileOutputStream(file);
-        ObjectOutputStream s = new ObjectOutputStream(f);
-        System.out.println("Saving map... (This will take a while, perhaps an hour)");
-        s.writeObject(qMap);
-        System.out.println("Finished writing object... flushing...");
-        s.flush();
-        System.out.println("Map saved.");
+        File qMatrixFile = new File("qMatrix.qmap");
+        if (qMatrixFile.exists() && !qMatrixFile.isDirectory()) {
+            List<String> lines = Files.readAllLines(qMatrixFile.toPath(), Charset.defaultCharset());
+
+            for (String line : lines) {
+                if (line.length() == 0) {
+                    continue;
+                }
+                String miniBoardString = Utils.getBetween(line, "a:^^^", "^^^:a");
+                MiniBoard miniBoard = new MiniBoard(miniBoardString);
+                Integer b = Integer.parseInt(Utils.getBetween(line, "b:^^^", "^^^:b"));
+                Integer c = Integer.parseInt(Utils.getBetween(line, "c:^^^", "^^^:c"));
+                Integer d = Integer.parseInt(Utils.getBetween(line, "d:^^^", "^^^:d"));
+                qMap.put(new ImmutablePair<>(miniBoard, b), new ImmutablePair<>(c, d));
+            }
+        }
     }
 
     private static void init() throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException {
@@ -93,8 +108,6 @@ public class Main {
         }
 
 
-
-
         // Set number formatters
         twoDecimalPoints = DecimalFormat.getInstance();
         twoDecimalPoints.setMinimumFractionDigits(2);
@@ -105,6 +118,10 @@ public class Main {
         threeDecimalPoints.setMinimumFractionDigits(3);
         threeDecimalPoints.setMaximumFractionDigits(3);
         threeDecimalPoints.setRoundingMode(RoundingMode.DOWN);
+
+
+        // Set displayGame from configuration
+        displayGame = Config.DISPLAY_GAME;
     }
 
     private static int R(Board b, Coords[] decision) {
@@ -212,7 +229,7 @@ public class Main {
         int numAlreadyVisited = 0;
         int numTotalVisits = 0;
 
-        while (numRuns-- > 0) { // while loop goes through numRuns loops
+        while (numRuns --> 0) { // while loop goes through numRuns loops
             c++;
             numCurRuns++;
             int percentDone = c * 100 / k;
@@ -222,10 +239,13 @@ public class Main {
                 System.out.println(o + "% complete." + " Map size: " + qMap.size() + ". Average score: " + threeDecimalPoints.format((double) (numRows) / (numCurRuns))
                         + ". " + twoDecimalPoints.format((1 - (double) (numAlreadyVisited) / (numTotalVisits)) * 100) + "% first time visits");
                 numRows = numCurRuns = 0;
+
+                displayGame = Config.DISPLAY_GAME;
             }
 
-
-            displayGame = numRuns % 1000 == 0;
+            if (c % Config.SAVE_CHUNK == 0) {
+                save();
+            }
 
             Api api = new Api();
             api.newGame();
