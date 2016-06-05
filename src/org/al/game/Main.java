@@ -80,6 +80,10 @@ public class Main {
                 Integer d = Integer.parseInt(Utils.getBetween(line, "d:^^^", "^^^:d"));
                 qMap.put(new ImmutablePair<>(miniBoard, b), new ImmutablePair<>(c, d));
             }
+
+            System.out.println("Regurgitation complete.");
+        } else {
+            System.out.println("Nothing to regurgitate.");
         }
     }
 
@@ -132,13 +136,11 @@ public class Main {
 
         if (bc.isLost()) {
             return -100;
-        } else if (bc.isWon()) {
-            return 100;
         } else {
-            int numberOfRowsToScale = Constants.BOARD_HEIGHT - 4 - 2; // 4 rows give -100; 2 rows give +100
-            double scaleFactor = (double) 200 / (numberOfRowsToScale + 1);
+            int numberOfRowsToScale = Constants.BOARD_HEIGHT - 4; // 4 rows give -100
+            double scaleFactor = (double) 100 / (numberOfRowsToScale + 1);
             double distanceFromTopOfScale = (double) Constants.BOARD_HEIGHT - (double) 4 - maxHeight;
-            double reward = scaleFactor * distanceFromTopOfScale - 100;
+            double reward = scaleFactor * distanceFromTopOfScale;
             return (int) Math.round(reward);
         }
 
