@@ -140,7 +140,7 @@ public class Main {
             int numberOfRowsToScale = Constants.BOARD_HEIGHT - 4; // 4 rows give -100
             double scaleFactor = (double) 100 / (numberOfRowsToScale + 1);
             double distanceFromTopOfScale = (double) Constants.BOARD_HEIGHT - (double) 4 - maxHeight;
-            double reward = scaleFactor * distanceFromTopOfScale;
+            double reward = scaleFactor * distanceFromTopOfScale - 100;
             return (int) Math.round(reward);
         }
 
