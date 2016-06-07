@@ -57,7 +57,7 @@ public class Main {
 
     private static void save() {
         System.out.print("Saving... ");
-        Saver s = new Saver(qMap);
+        Saver s = new Saver(qMap, numGames);
         new Thread(s).run();
         System.out.println("Saved!");
     }
@@ -70,9 +70,23 @@ public class Main {
             List<String> lines = Files.readAllLines(qMatrixFile.toPath(), Charset.defaultCharset());
 
             for (String line : lines) {
+
+                /* SPECIAL CASES */
+
                 if (line.length() == 0) {
                     continue;
                 }
+                if (line.contains("----------->")) {
+                    numGames = Integer.parseInt(Utils.getBetween(line, "----------->", "<-----------"));
+                    continue;
+                }
+                if (line.contains("            *     ,MMM8&&&.            *")) { //Cats!
+                    break;
+                }
+
+
+                /* GENERAL CASE OF QMAP ENTRY */
+
                 String miniBoardString = Utils.getBetween(line, "a:^^^", "^^^:a");
                 MiniBoard miniBoard = new MiniBoard(miniBoardString);
                 Integer b = Integer.parseInt(Utils.getBetween(line, "b:^^^", "^^^:b"));
@@ -231,6 +245,8 @@ public class Main {
         int numAlreadyVisited = 0;
         int numTotalVisits = 0;
 
+        int max = 0;
+
         while (numRuns --> 0) { // while loop goes through numRuns loops
             c++;
             numCurRuns++;
@@ -239,7 +255,7 @@ public class Main {
                 o = percentDone;
 
                 System.out.println(o + "% complete." + " Map size: " + qMap.size() + ". Average score: " + threeDecimalPoints.format((double) (numRows) / (numCurRuns))
-                        + ". " + twoDecimalPoints.format((1 - (double) (numAlreadyVisited) / (numTotalVisits)) * 100) + "% first time visits");
+                        + ". " + twoDecimalPoints.format((1 - (double) (numAlreadyVisited) / (numTotalVisits)) * 100) + "% first time visits. (Current record = " + max + ")");
                 numRows = numCurRuns = 0;
 
                 displayGame = Config.DISPLAY_GAME;
@@ -308,6 +324,9 @@ public class Main {
 
                 if (!placed) { // Game lost
 //                System.out.println("Final score: " + api.getScore() + ".");
+                    if (api.getScore() > max) {
+                        max = api.getScore();
+                    }
                     numRows += api.getScore();
                     break;
                 }
