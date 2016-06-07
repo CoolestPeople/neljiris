@@ -102,6 +102,9 @@ public class Main {
     }
 
     private static void init() throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException {
+        // Set displayGame from configuration
+        displayGame = Config.DISPLAY_GAME;
+
         // set the look and feel
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
@@ -136,10 +139,6 @@ public class Main {
         threeDecimalPoints.setMinimumFractionDigits(3);
         threeDecimalPoints.setMaximumFractionDigits(3);
         threeDecimalPoints.setRoundingMode(RoundingMode.DOWN);
-
-
-        // Set displayGame from configuration
-        displayGame = Config.DISPLAY_GAME;
     }
 
     private static int R(Board b, Coords[] decision) {
