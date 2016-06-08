@@ -25,6 +25,12 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static org.al.config.Config.QMAP_PATH;
+
+import static org.al.config.Config.BOARD_WIDTH;
+import static org.al.config.Config.BOARD_HEIGHT;
+
+
 public class Main {
     private static boolean displayGame;
 
@@ -61,11 +67,10 @@ public class Main {
         new Thread(s).run();
         System.out.println("Saved!");
     }
-
     private static void regurgitate() throws IOException, ClassNotFoundException {
         System.out.println(Utils.getBetween("dfhkjadfhldskajfhlksssvjRegurgitating...asdfdsddfsdf", "fhlksssvj", "asdfdsddf"));
 
-        File qMatrixFile = new File("qMatrix.qmap");
+        File qMatrixFile = new File(QMAP_PATH);
         if (qMatrixFile.exists() && !qMatrixFile.isDirectory()) {
             List<String> lines = Files.readAllLines(qMatrixFile.toPath(), Charset.defaultCharset());
 
@@ -115,8 +120,8 @@ public class Main {
 
             printedTetrisBoard.setFont(new Font("monospaced", Font.PLAIN, 12));
 
-            printedTetrisBoard.setColumns(Constants.BOARD_WIDTH);
-            printedTetrisBoard.setRows(Constants.BOARD_HEIGHT);
+            printedTetrisBoard.setColumns(BOARD_WIDTH);
+            printedTetrisBoard.setRows(BOARD_HEIGHT);
 
             frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             frame.setLayout(new GridLayout());
@@ -150,9 +155,9 @@ public class Main {
         if (bc.isLost()) {
             return -100;
         } else {
-            int numberOfRowsToScale = Constants.BOARD_HEIGHT - 4; // 4 rows give -100
+            int numberOfRowsToScale = BOARD_HEIGHT - 4; // 4 rows give -100
             double scaleFactor = (double) 100 / (numberOfRowsToScale + 1);
-            double distanceFromTopOfScale = (double) Constants.BOARD_HEIGHT - (double) 4 - maxHeight;
+            double distanceFromTopOfScale = (double) BOARD_HEIGHT - (double) 4 - maxHeight;
             double reward = scaleFactor * distanceFromTopOfScale - 100;
             return (int) Math.round(reward);
         }

@@ -9,6 +9,13 @@ public class Constants {
     public static final char PIECE_T = 'T';
     public static final char PIECE_Z = 'Z';
 
+    /**
+     * @deprecated - use Config.BOARD_WIDTH in the org.al.config package instead.
+     */
     public static final int BOARD_WIDTH = 4;
-    public static final int BOARD_HEIGHT = 15;
+
+    /**
+     * @deprecated - use Config.BOARD_HEIGHT in the org.al.config package instead.
+     */
+    public static final int BOARD_HEIGHT = 4;
 }

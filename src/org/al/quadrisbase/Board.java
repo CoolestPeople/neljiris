@@ -6,8 +6,8 @@ import org.al.quadrisexceptions.NonexistentTetrisPieceException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.al.quadrisbase.Constants.BOARD_HEIGHT;
-import static org.al.quadrisbase.Constants.BOARD_WIDTH;
+import static org.al.config.Config.BOARD_HEIGHT;
+import static org.al.config.Config.BOARD_WIDTH;
 
 public class Board { //TODO: Move ALL_SPACES to the Constants class
     private static Coords[][][] ALLSPACES =
@@ -208,6 +208,7 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
      * @return true if game is won (board almost empty), false otherwise
      */
     // COMPLETE
+    @Deprecated
     public boolean isWon() {
         for (int r = 0; r < board.length - org.al.etc.Constants.WON_THRESHOLD; r++) {
             for (int c = 0; c < board[r].length; c++) {

@@ -1,9 +1,10 @@
 package org.al.etc;
 
+/**
+ * @deprecated  - Use Config instead. This class will be deleted in the next release of neljiris.
+ */
 public class Constants {
-    public static final String USER_DIR = System.getProperty("user.dir");
 
-    public static final int TRAIN_MOVES = 50;
-
+    @Deprecated
     public static final int WON_THRESHOLD = 2;
 }
