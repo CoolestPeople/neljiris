@@ -210,7 +210,7 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
     // COMPLETE
     @Deprecated
     public boolean isWon() {
-        for (int r = 0; r < board.length - org.al.etc.Constants.WON_THRESHOLD; r++) {
+        for (int r = 0; r < board.length - Constants.WON_THRESHOLD; r++) {
             for (int c = 0; c < board[r].length; c++) {
                 if (board[r][c] == 'X') {
                     return false;

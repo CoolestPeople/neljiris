@@ -18,4 +18,8 @@ public class Constants {
      * @deprecated - use Config.BOARD_HEIGHT in the org.al.config package instead.
      */
     public static final int BOARD_HEIGHT = 4;
+
+
+    @Deprecated
+    protected static final int WON_THRESHOLD = 2;
 }
