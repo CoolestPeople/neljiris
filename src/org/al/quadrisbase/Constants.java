@@ -9,6 +9,16 @@ public class Constants {
     public static final char PIECE_T = 'T';
     public static final char PIECE_Z = 'Z';
 
+    public static final char[] PIECES = new char[]{
+            PIECE_I,
+            PIECE_J,
+            PIECE_L,
+            PIECE_O,
+            PIECE_S,
+            PIECE_T,
+            PIECE_Z
+    };
+
     /**
      * @deprecated - use Config.BOARD_WIDTH in the org.al.config package instead.
      */

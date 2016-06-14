@@ -20,7 +20,13 @@ public class Api {
     }
 
     public Piece getPiece() {
-        return board.getPiece();
+        try {
+            return board.getPiece();
+        } catch (NonexistentTetrisPieceException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     public boolean placePiece(Coords[] pieceCoords) {

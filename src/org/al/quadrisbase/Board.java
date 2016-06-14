@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import static org.al.config.Config.BOARD_HEIGHT;
 import static org.al.config.Config.BOARD_WIDTH;
+import static org.al.config.Config.HATETRIS;
 
 public class Board { //TODO: Move ALL_SPACES to the Constants class
     private static Coords[][][] ALLSPACES =
@@ -103,6 +104,28 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
     private void setBoard(char[][] old_board) {
         for (int r = 0; r < this.board.length; r++)
             System.arraycopy(old_board[r], 0, this.board[r], 0, this.board[0].length);
+    }
+
+    private List<Coords[]> possibleTrashMoves(Piece piece) throws NonexistentTetrisPieceException {
+        List<Coords[]> possibleMoves = possibleMoves(piece);
+        List<Coords[]> trashMoves = new ArrayList<>();
+
+        int trashThreshold = 0;
+
+        while (trashMoves.isEmpty()) {
+            for (Coords[] move : possibleMoves) {
+                Board cur_b = this.boardClone();
+                cur_b.placePieceWithoutRemovingRows(move);
+                int fullRows = cur_b.getCompleteRows().length;
+                if (fullRows == trashThreshold) { // Trash move
+                    trashMoves.add(move);
+                }
+            }
+
+            trashThreshold++;
+        }
+
+        return trashMoves;
     }
 
     // Gives all possible possible moves based on piece.getType().
@@ -255,6 +278,12 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
     }
     */
 
+    private void placePieceWithoutRemovingRows(Coords[] pieceCoords) {
+        for (Coords c : pieceCoords) {
+            board[c.r][c.c] = 'X';
+        }
+    }
+
     // COMPLETE
     // Doesn't make sure pieceCoords represents a valid move.
     // Returns true if game is lost, false otherwise.
@@ -333,12 +362,40 @@ public class Board { //TODO: Move ALL_SPACES to the Constants class
     }
 
     // COMPLETE
-    public Piece getPiece() {
-        if (block.size() < 2) {
-            generateSevenPieces();
-        }
+    public Piece getPiece() throws NonexistentTetrisPieceException {
+        if (!HATETRIS) {
+            if (block.size() < 2) {
+                generateSevenPieces();
+            }
 
-        return block.remove()/*poll*/;
+            return block.remove()/*poll*/;
+        } else {
+            Board board = this.boardClone();
+
+            char worstNextPiece = Constants.PIECE_I;
+            double worstNextHeight = 0;
+
+            for (char potentialNextPiece : Constants.PIECES) {
+                double lowestHeight = BOARD_HEIGHT + 1;
+
+                for (Coords[] position : possibleTrashMoves(new Piece(potentialNextPiece))) {
+                    Board cur_b = board.boardClone();
+                    cur_b.placePiece(position);
+                    double heightWithThisPlacement = cur_b.getAverageHeight();
+
+                    if (heightWithThisPlacement < lowestHeight) {
+                        lowestHeight = heightWithThisPlacement;
+                    }
+                }
+
+                if (lowestHeight > worstNextHeight) {
+                    worstNextHeight = lowestHeight;
+                    worstNextPiece = potentialNextPiece;
+                }
+            }
+
+            return new Piece(worstNextPiece);
+        }
     }
 
     // COMPLETE
