@@ -2,6 +2,7 @@ package org.al.game;
 
 import org.al.api.Api;
 import org.al.config.Config;
+import org.al.config.InitConfig;
 import org.al.generic.Coords;
 import org.al.quadrisbase.Board;
 import org.al.quadrisbase.Constants;
@@ -24,11 +25,9 @@ import java.text.NumberFormat;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
-import static org.al.config.Config.QMAP_PATH;
-
-import static org.al.config.Config.BOARD_WIDTH;
-import static org.al.config.Config.BOARD_HEIGHT;
+import static org.al.config.Config.*;
 
 
 public class Main {
@@ -47,6 +46,9 @@ public class Main {
 
 
     public static void main(String[] args) throws InterruptedException, ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException, NonexistentTetrisPieceException, IOException {
+        /* Configuration init stuff */
+        InitConfig.init();
+
         /* App init stuff */
         init();
 
@@ -54,7 +56,7 @@ public class Main {
         regurgitate();
 
         int curNumRuns = Config.TOTAL_RUNS;
-        System.out.println(new Main().qLearn(curNumRuns));
+        System.out.println((!LEARN_GAME) ? (new Main().play(curNumRuns)) : (new Main().qLearn(curNumRuns)));
 
         System.out.println("Saving...");
         save();
@@ -106,6 +108,26 @@ public class Main {
         }
     }
 
+    private static void initPlayingArea() {
+        printedTetrisBoard = new JTextArea("Loading...");
+
+        final JFrame frame = new JFrame();
+
+        printedTetrisBoard.setFont(new Font("monospaced", Font.PLAIN, 12));
+
+        printedTetrisBoard.setColumns(BOARD_WIDTH);
+        printedTetrisBoard.setRows(BOARD_HEIGHT);
+
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setLayout(new GridLayout());
+
+        frame.getContentPane().add(printedTetrisBoard);
+        frame.pack();
+
+        frame.setVisible(true);
+        frame.setLocationRelativeTo(null);
+    }
+
     private static void init() throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException {
         // Set displayGame from configuration
         displayGame = Config.DISPLAY_GAME;
@@ -114,23 +136,7 @@ public class Main {
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
         if (displayGame) {
-            printedTetrisBoard = new JTextArea("Loading...");
-
-            final JFrame frame = new JFrame();
-
-            printedTetrisBoard.setFont(new Font("monospaced", Font.PLAIN, 12));
-
-            printedTetrisBoard.setColumns(BOARD_WIDTH);
-            printedTetrisBoard.setRows(BOARD_HEIGHT);
-
-            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-            frame.setLayout(new GridLayout());
-
-            frame.getContentPane().add(printedTetrisBoard);
-            frame.pack();
-
-            frame.setVisible(true);
-            frame.setLocationRelativeTo(null);
+            initPlayingArea();
         }
 
 
@@ -240,6 +246,9 @@ public class Main {
     }
 
     private String qLearn(int numRuns) throws NonexistentTetrisPieceException, InterruptedException, IOException {
+        List<Board> bestGame = new ArrayList<>();
+        int max = 0;
+
         int k = numRuns;
         int c = 0;
         int o = 0;
@@ -248,8 +257,6 @@ public class Main {
         int numCurRuns = 0;
         int numAlreadyVisited = 0;
         int numTotalVisits = 0;
-
-        int max = 0;
 
         while (numRuns --> 0) { // while loop goes through numRuns loops
             c++;
@@ -273,6 +280,7 @@ public class Main {
             api.newGame();
             numGames++;
             double epsilon = 1.0 / numGames;
+            List<Board> maybeBetterGame = new ArrayList<>();
 
             while (true) {
                 Piece currentPiece = api.getPiece();
@@ -309,6 +317,9 @@ public class Main {
                 Board old_board = api.getBoard().boardClone();
 
                 boolean placed = api.placePiece(decision);
+                if (SAVE_BEST_GAME) {
+                    maybeBetterGame.add(api.getBoard().boardClone());
+                }
 
                 // UPDATE Q FUNCTION HERE
 
@@ -330,6 +341,9 @@ public class Main {
 //                System.out.println("Final score: " + api.getScore() + ".");
                     if (api.getScore() > max) {
                         max = api.getScore();
+                        if (SAVE_BEST_GAME) {
+                            bestGame = new ArrayList<>(maybeBetterGame);
+                        }
                     }
                     numRows += api.getScore();
                     break;
@@ -339,9 +353,24 @@ public class Main {
             displayGame = false;
         }
 
+        if (SAVE_BEST_GAME) {
+            String[] cmd = {"say \"Hey! I'm displaying the best game!\""};
+            Runtime.getRuntime().exec(cmd);
+
+            initPlayingArea();
+
+            for (int i = 0; i < 5; i++) {
+                printedTetrisBoard.setText("BEST GAME!");
+                Thread.sleep(300);
+            }
+
+            for (Board b : bestGame) {
+                printedTetrisBoard.setText(b.toString());
+                Thread.sleep(500);
+            }
+        }
+
         return "We're smart";
-
-
     }
 
     // Average of best future actions for each possible future piece type
@@ -366,5 +395,129 @@ public class Main {
             averageBest += maxQValue;
         }
         return averageBest / possible_futures.length;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private String play(int numRuns) throws NonexistentTetrisPieceException, InterruptedException, IOException {
+        List<Board> bestGame = new ArrayList<>();
+        int max = 0;
+
+        int k = numRuns;
+        int c = 0;
+        int o = 0;
+
+        int numRows = 0;
+        int numCurRuns = 0;
+
+        while (numRuns --> 0) { // while loop goes through numRuns loops
+            c++;
+            numCurRuns++;
+            int percentDone = c * 100 / k;
+            if (o != percentDone) {
+                o = percentDone;
+
+                System.out.println(o + "% complete." + " Map size: " + qMap.size() + ". Average score: " + threeDecimalPoints.format((double) (numRows) / (numCurRuns))
+                        + " (Current record = " + max + ")");
+                numRows = numCurRuns = 0;
+
+                displayGame = Config.DISPLAY_GAME;
+            }
+
+            Api api = new Api();
+            api.newGame();
+            numGames++;
+            double epsilon = 1.0 / numGames;
+            List<Board> maybeBetterGame = new ArrayList<>();
+
+            while (true) {
+                Piece currentPiece = api.getPiece();
+                char pieceType = currentPiece.getType();
+
+                List<Coords[]> possiblePositions = api.possibleMoves(currentPiece);
+
+                Coords[] decision = possiblePositions.get(0);
+
+                // SET decision HERE
+
+//                // Start test
+//
+//                setQ(api.getBoard(), pieceType, decision, 3);
+//                System.out.println("This should be 3: " + Q(api.getBoard().boardClone(), pieceType, decision.clone()));
+//
+//                // End test
+
+                // Take optimal action
+                decision = optimalAction(api.getBoard(), possiblePositions, pieceType);
+
+                Board old_board = api.getBoard().boardClone();
+
+                boolean placed = api.placePiece(decision);
+                if (SAVE_BEST_GAME) {
+                    maybeBetterGame.add(api.getBoard().boardClone());
+                }
+
+                // Print the current board to the JTextArea
+                if (displayGame) {
+                    printedTetrisBoard.setText(api.getBoard().toString());
+
+                    Thread.sleep(250);
+                }
+
+
+                if (!placed) { // Game lost
+//                System.out.println("Final score: " + api.getScore() + ".");
+                    if (api.getScore() > max) {
+                        max = api.getScore();
+                        if (SAVE_BEST_GAME) {
+                            bestGame = new ArrayList<>(maybeBetterGame);
+                        }
+                    }
+                    numRows += api.getScore();
+                    break;
+                }
+            }
+
+            displayGame = false;
+        }
+
+        if (SAVE_BEST_GAME) {
+            String[] cmd = {"say", "Hey! I'm displaying the best game!"};
+            Runtime.getRuntime().exec(cmd);
+
+            initPlayingArea();
+
+            for (int i = 0; i < 5; i++) {
+                printedTetrisBoard.setText("BEST GAME!");
+                Thread.sleep(300);
+            }
+
+            for (Board b : bestGame) {
+                printedTetrisBoard.setText(b.toString());
+                Thread.sleep(500);
+            }
+        }
+
+        return "We're smart";
+
+
     }
 }

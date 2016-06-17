@@ -1,18 +1,23 @@
 package org.al.config;
 
 public class Config {
-    public static final int TOTAL_RUNS = 10000;
-    public static final int SAVE_CHUNK = 100;
+    public static int TOTAL_RUNS;
+    public static int SAVE_CHUNK;
 
-    public static final String QMAP_PATH = "qMatrix.qmap";
+    public static String QMAP_PATH;
 
-    public static final boolean DISPLAY_GAME = true;
-
-
-    public static final boolean HATETRIS = true;
+    public static boolean LEARN_GAME;
+    public static boolean DISPLAY_GAME;
 
 
+    public static boolean HATETRIS;
 
-    public static final int BOARD_WIDTH = 4;
-    public static final int BOARD_HEIGHT = 15;
+
+
+    public static boolean SAVE_BEST_GAME;
+
+
+
+    public static int BOARD_WIDTH;
+    public static int BOARD_HEIGHT;
 }

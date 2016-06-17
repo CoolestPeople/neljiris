@@ -1,5 +1,6 @@
 package org.al.save;
 
+import org.al.config.Config;
 import org.al.quadrisbase.MiniBoard;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
@@ -26,7 +27,7 @@ public class Saver implements Runnable {
     }
 
     public void save() throws IOException {
-        PrintWriter writer = new PrintWriter("qMatrix.qmap", "UTF-8");
+        PrintWriter writer = new PrintWriter(Config.QMAP_PATH, "UTF-8");
 
         writer.println("----------->" + numGames + "<-----------");
 
