@@ -1,5 +1,10 @@
 # neljiris
 
+Neljiris -- from the Sami _nelji_, meaning _four_, is a reinforcement learning-based program that learns to play Tetris.
+
+By Andrew Gritsevskiy and Louie Golowich
+AP Computer Science, June 2016
+
 ## prerequisites
 
 * Apache commons lang (Download from [here](https://commons.apache.org/proper/commons-lang/download_lang.cgi))
